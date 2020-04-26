@@ -8,6 +8,7 @@
 #include <readline/history.h>
 
 void cpu_exec(uint64_t);
+void isa_reg_display();
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -36,7 +37,36 @@ static int cmd_q(char *args) {
   return -1;
 }
 
+static int cmd_si(char *args){
+  int steps = atoi(args);
+  steps = steps <= 0 ? 1 : steps;
+
+  for (int i = 0; i < steps; i++){
+    cpu_exec(1);
+  }
+
+  return 0;
+}
+
 static int cmd_help(char *args);
+
+static int cmd_info(char*args){
+  isa_reg_display();
+  return 0;
+}
+
+static int cmd_x(char*args){
+  paddr_t addr = IMAGE_START;
+  printf("Address,Value\n");
+
+  for (int i = 0; i < 64; i++)
+  {
+    uint32_t value = paddr_read(addr, 1);
+    printf("0x%x,0x%02x\n", addr++, value);
+  }
+
+  return 0;
+}
 
 static struct {
   char *name;
@@ -46,6 +76,9 @@ static struct {
   { "help", "Display informations about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
+  { "si", "Single step execution of the program", cmd_si },
+  { "info", "Display register info", cmd_info },
+  { "x", "Scan memory", cmd_x }
 
   /* TODO: Add more commands */
 
